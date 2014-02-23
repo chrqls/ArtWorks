@@ -39,9 +39,9 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	static final String DEBUG_TAG = "ArtworksListActivity";
 	static final String ACTION_SHOW_DETAILS="ACTION_SHOW_DETAILS";
 	static final String EXTRA_ARTWORK_ID="EXTRA_ARTWORK_ID";
-	//static final String RADBEACON_UUID="ADFBB825-4268-4269-BFA7-C6B392CDB02A";
-	static final String RADBEACON_UUID="adfbb825-4268-4269-bfA7-c6b392cdb02a";
-	static final String RADBEACON_UUID_TEST="adfbb82542684269bfa7c6b392cdb02a";
+	static final String RADBEACON_UUID="adfbb82542684269bfa7c6b392cdb02a";
+	static final String WARHOL_PIC_NAME = "male_fem.jpg";
+	static final String POLLOCK_PIC_NAME = "warhol.jpg";
 	static final String UNIQUE_ID="Museum";
 	
 	private IBeaconManager iBeaconManager;
@@ -58,15 +58,10 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.artwork_list_activity);
 		
-		/*iBeaconManager = IBeaconManager.getInstanceForApplication(this);
+		iBeaconManager = IBeaconManager.getInstanceForApplication(this);
         verifyBluetooth();
-        iBeaconManager.bind(this);	*/
-	
-        
-        
-        //SimulatedScanData data = new SimulatedScanData();
-		
-		
+        iBeaconManager.bind(this);	
+	          	
 		mListView = (ListView) findViewById(R.id.artworks_listview);
 		mAvailableArtworks = new ArrayList<Artwork>();
 		mAvailableBeacon = new ArrayList<Beacon>();
@@ -104,20 +99,30 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 			db.addArtworks(artwork1);
 			db.addArtworks(artwork2);
 		}
+		
+		Artwork artwork = db.getArtwork(1);
+		picturePath = pictureFileDir.getPath()+File.separator+"DCIM"+File.separator+"Camera"+File.separator+WARHOL_PIC_NAME;
+		artwork.setmImageUri(Uri.parse(picturePath));
+		db.updateArtwork(artwork);
 			
 	    List<Artwork> list = db.getAllArtworks();
+	    
+	   /* for (Artwork artwork : list) {
+			Log.i(DEBUG_TAG, String.valueOf(artwork.getId()));
+		}*/
+	    
 	    BeaconSQLiteHelper beaconDB = new BeaconSQLiteHelper(ArtworksListActivity.this);
 	    
 	    
 	    if(list.size()>0){
-			Beacon beacon = new Beacon(RADBEACON_UUID_TEST,1,1);
+			Beacon beacon = new Beacon(RADBEACON_UUID,1,1);
 			beacon.setArtworkId(list.get(0).getId());
-			beaconDB.addBeacon(beacon);
+			//beaconDB.addBeacon(beacon);
 	    }
 	    
 	    
 	    
-	    mAdapter= new ArtworksListAdapter(this, list); 
+	    mAdapter= new ArtworksListAdapter(this, mAvailableArtworks); 
 	    mListView.setAdapter(mAdapter);
 	              
 	    mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -148,19 +153,19 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	 @Override 
 	 protected void onDestroy() {   
 		 super.onDestroy();
-	        //iBeaconManager.unBind(this);
+	        iBeaconManager.unBind(this);
 	 }
 	 
 	 @Override 
 	 protected void onPause() {
 	    super.onPause();
-	    //if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, true);    		
+	    if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, true);    		
 	 }
 	    
 	 @Override 
 	 protected void onResume() {
 	    super.onResume();
-	    //if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, false);    		
+	    if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, false);    		
 	 }    
 	    
 	
@@ -183,6 +188,8 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
     	});
 		
 	}
+	
+
 
 	private void verifyBluetooth() {
 
@@ -251,8 +258,16 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 						e.printStackTrace();
 					}
 		        	Beacon beacon = beaconDb.getBeacon(region.getProximityUuid().replace("-", ""));
-		        	mAvailableArtworks.remove(beacon.getArtworkId()-1);
-		        	//mLastBeaconList.remove(beacon);
+		        	
+		        	if(beacon!=null)
+		        		mAvailableArtworks.remove(beacon.getArtworkId()-1);
+		        	/*for (IBeacon iBeacon : mLastBeaconList) {
+						String uuid = iBeacon.getProximityUuid().replace("-", "");
+						String cuuid = beacon.getUUID();
+		        		if(uuid.equals(cuuid)){
+		        			//delete
+						}
+					}*/
 		        	updateUi();
 						
 		        }
@@ -300,7 +315,7 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 								e.printStackTrace();
 							}
 						}else{
-							beacons.add(iBeacon);
+							//beacons.add(iBeacon);
 						}
 					}
 				}

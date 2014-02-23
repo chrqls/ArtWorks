@@ -33,7 +33,7 @@
         </activity>
         
            
-    <service android:enabled="true"
+    <!--  <service android:enabled="true"
         android:exported="true"
         android:isolatedProcess="false"
         android:label="iBeacon"
@@ -47,7 +47,7 @@
             <action android:name="com.artworks.ui.DID_RANGING" />
             <action android:name="com.artworks.ui.DID_MONITORING" />
         </intent-filter>
-    </service>
+    </service>-->
     </application>
 
 </manifest>

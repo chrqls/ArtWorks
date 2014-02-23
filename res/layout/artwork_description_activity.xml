@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5sp"
 			android:layout_below="@+id/textview_artwork_name"
-            android:text="description"
+            android:text="@string/mock_description"
             android:textSize="20sp" />
 </RelativeLayout>
 

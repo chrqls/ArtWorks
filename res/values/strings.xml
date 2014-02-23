@@ -4,8 +4,6 @@
     <string name="app_name">Artworks</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-
-    
     <string name="mock_nationality_date">American, 1928-1987</string>
     <string name="mock_artwork_type">Oil on canvas</string>
     <string name="mock_artist_name">Anish Kapoor</string>
