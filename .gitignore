@@ -2,3 +2,4 @@ bin/*
 gen/*
 *.classpath
 src/com/radiusnetworks/*
+*roject.properties
