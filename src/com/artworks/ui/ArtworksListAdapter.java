@@ -45,7 +45,7 @@ public class ArtworksListAdapter extends ArrayAdapter<Artwork> {
 		      ViewHolder viewHolder = new ViewHolder();
 		      viewHolder.image = (ImageView) rowView.findViewById(R.id.imageView1);
 		      viewHolder.artistName = (TextView) rowView.findViewById(R.id.textview_artist_name);
-		      viewHolder.creationDate = (TextView) rowView.findViewById(R.id.textview_creationdate);
+		      //viewHolder.creationDate = (TextView) rowView.findViewById(R.id.textview_creationdate);
 		      viewHolder.artworkName = (TextView) rowView.findViewById(R.id.textview_artwork_name);	
 		      viewHolder.description = (TextView) rowView.findViewById(R.id.textView_description);
 		      rowView.setTag(viewHolder);
@@ -59,8 +59,8 @@ public class ArtworksListAdapter extends ArrayAdapter<Artwork> {
 		    s = String.valueOf(artwork.getmArtworkName());
 		    holder.artworkName.setText(s);
 
-		    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 	    	
-		    holder.creationDate.setText(dateFormat.format(artwork.getmCreationDate()));
+//		    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 	    	
+//		    holder.creationDate.setText(dateFormat.format(artwork.getmCreationDate()));
 		    
 		    s = artwork.getmDescription();
 		    s= s.substring(0, 150)+"...";
