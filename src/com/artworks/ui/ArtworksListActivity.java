@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import com.artworks.ui.R;
 import com.artworks.data.Artwork;
 import com.artworks.data.ArtworkSQLiteHelper;
@@ -37,12 +39,15 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	static final String DEBUG_TAG = "ArtworksListActivity";
 	static final String ACTION_SHOW_DETAILS="ACTION_SHOW_DETAILS";
 	static final String EXTRA_ARTWORK_ID="EXTRA_ARTWORK_ID";
-	static final String RADBEACON_UUID="ADFBB825-4268-4269-BFA7-C6B392CDB02A";
+	//static final String RADBEACON_UUID="ADFBB825-4268-4269-BFA7-C6B392CDB02A";
+	static final String RADBEACON_UUID="adfbb825-4268-4269-bfA7-c6b392cdb02a";
+	static final String RADBEACON_UUID_TEST="adfbb82542684269bfa7c6b392cdb02a";
 	static final String UNIQUE_ID="Museum";
 	
 	private IBeaconManager iBeaconManager;
 	private List<Beacon> mAvailableBeacon;
 	private List<Artwork> mAvailableArtworks;
+	private Collection<IBeacon> mLastBeaconList;
 	 ListView mListView;
 	
 	ArtworksListAdapter mAdapter;
@@ -105,12 +110,9 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	    
 	    
 	    if(list.size()>0){
-	    	
-	    	for (Artwork artwork : list) {
-				Beacon beacon = new Beacon(RADBEACON_UUID,1,1);
-				beacon.setArtworkId(artwork.getId());
-				beaconDB.addBeacon(beacon);
-			}
+			Beacon beacon = new Beacon(RADBEACON_UUID_TEST,1,1);
+			beacon.setArtworkId(list.get(0).getId());
+			beaconDB.addBeacon(beacon);
 	    }
 	    
 	    
@@ -172,8 +174,14 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	}
 	
 	public void updateUi() {
-		mAdapter.notifyDataSetChanged();
-		mListView.refreshDrawableState();
+		
+		runOnUiThread(new Runnable() {
+    	    public void run() {
+    	    	mAdapter.notifyDataSetChanged();
+    			mListView.refreshDrawableState();
+    	    }
+    	});
+		
 	}
 
 	private void verifyBluetooth() {
@@ -216,70 +224,48 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 
 	@Override
 	public void onIBeaconServiceConnect() {
-		 iBeaconManager.setMonitorNotifier(new MonitorNotifier() {
+		 
+		final BeaconSQLiteHelper beaconDb = new BeaconSQLiteHelper(ArtworksListActivity.this);
+		final ArtworkSQLiteHelper artworkDb = new ArtworkSQLiteHelper(ArtworksListActivity.this);
+		
+		iBeaconManager.setMonitorNotifier(new MonitorNotifier() {
 		       
 			 	@Override
 		        public void didEnterRegion(Region region) {
-		          ToastToDisplay("Enter Region - id : "+ region.getUniqueId()+
-		        		  " UUID : "+region.getProximityUuid()+
-		        		  " Major : "+region.getMajor()+
-		        		  " Minor : "+region.getMinor());
+			 	  //ToastToDisplay("Enter UUID : "+region.getProximityUuid());
+		          String uuid = region.getProximityUuid().replace("-", "");
 		          
-		          //int major  = region.getMajor();
-		          //int minor  = region.getMinor();
-		          String uuid = region.getProximityUuid();
-		          
-		         
-
-		          		          
-		          runOnUiThread(new Runnable() {
-		      	    public void run() {
-		      	    	
-		      	    	if(mAvailableBeacon.size()==0){
-				        	  BeaconSQLiteHelper db = new BeaconSQLiteHelper(ArtworksListActivity.this);      
-					          List<Beacon> list = db.getAllBeacons();
-				        	  mAvailableBeacon.add(list.get(0));
-				          }
-
-		      	    	mAvailableArtworks.clear();
-		      	    	ArtworkSQLiteHelper db = new ArtworkSQLiteHelper(ArtworksListActivity.this);      
-				          
-		      	    	for (Beacon beacon : mAvailableBeacon) {
-		      	    		Artwork artwork = db.getArtwork(beacon.getArtworkId());
-							mAvailableArtworks.add(artwork);
-						}
-		      	    	
-		      	    	updateUi();
-		      	    }
-		      	});
-		         
-		          
-		          
+		          Beacon b = beaconDb.getBeacon(uuid);
+		          if(b!=null){
+						mAvailableArtworks.add(artworkDb.getArtwork(b.getArtworkId()));
+						updateUi();
+				  }
 			 	}
 
 		        @Override
 		        public void didExitRegion(Region region) {
-		        	 ToastToDisplay("Exit Region - id : "+ region.getUniqueId()+
-			        		  " UUID : "+region.getProximityUuid()+
-			        		  " Major : "+region.getMajor()+
-			        		  " Minor : "+region.getMinor());
+		        	 //ToastToDisplay("Exit UUID : "+region.getProximityUuid());
+		        	try {
+						iBeaconManager.stopMonitoringBeaconsInRegion(region);
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+		        	Beacon beacon = beaconDb.getBeacon(region.getProximityUuid().replace("-", ""));
+		        	mAvailableArtworks.remove(beacon.getArtworkId()-1);
+		        	//mLastBeaconList.remove(beacon);
+		        	updateUi();
+						
 		        }
 
 		        @Override
 		        public void didDetermineStateForRegion(int state, Region region) {
-		        	 String s = null;
+		        	/*String s = null;
 		        	switch (state) {
 					case 0:
-						s="PROXIMITY_UNKNOW";
+						s="OUTSIDE";
 						break;
 					case 1:
-						s="PROXIMITY_NEAR";
-						break;
-					case 2:
-						s="PROXIMITY_IMMEDIATE";
-						break;
-					case 3:
-						s="PROXIMITY_FAR";
+						s="INSIDE";
 						break;
 
 					default:
@@ -287,11 +273,7 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 					}
 		        	
 		        	
-		        	ToastToDisplay("Enter Region - id : "+ region.getUniqueId()+
-			        		  " UUID : "+region.getProximityUuid()+
-			        		  " Major : "+region.getMajor()+
-			        		  " Minor : "+region.getMinor()+
-			        		  " State : "+s);
+		        	ToastToDisplay(s +" "+region.getProximityUuid());*/
     
 		        }
 
@@ -303,13 +285,43 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 			@Override
 			public void didRangeBeaconsInRegion(Collection<IBeacon> beacons, Region region) {
 				
-				for (IBeacon iBeacon : beacons) {
-					/*ToastToDisplay("Region - id : "+ region.getUniqueId()+
-			        		  " UUID : "+region.getProximityUuid()+
-			        		  " Major : "+region.getMajor()+
-			        		  " Minor : "+region.getMinor()+
-			        		  " State : ");*/
+				String message = "New Region -  Beacon NB :"+ beacons.size();
+				Log.e(DEBUG_TAG, message);
+				
+				if(mLastBeaconList!=null){
+
+					Collection<IBeacon> c = CollectionUtils.disjunction(beacons, mLastBeaconList);
+					for (IBeacon iBeacon : c) {
+						
+						if(beacons.contains(iBeacon)){ // It's a new beacon
+							try {
+								iBeaconManager.startMonitoringBeaconsInRegion(new Region(iBeacon.getProximityUuid(), iBeacon.getProximityUuid(), iBeacon.getMajor(), iBeacon.getMinor()));
+							} catch (RemoteException e) {
+								e.printStackTrace();
+							}
+						}else{
+							beacons.add(iBeacon);
+						}
+					}
+				}
 					
+				
+				mLastBeaconList = beacons;	
+				Log.i(DEBUG_TAG, "NB : "+mLastBeaconList.size());
+				
+				
+				/*if(!mLastBeaconList.containsAll(beacons)){
+					Log.i(DEBUG_TAG, "old list don't contain all");
+				}*/
+				
+				
+			
+				
+				
+				/*for (IBeacon iBeacon : beacons) {
+					
+					
+				
 					ToastToDisplay("Beacon - uuid : "+ iBeacon.getProximityUuid()+
 			        		  " proximity : "+iBeacon.getProximity()+
 			        		  " Major : "+iBeacon.getMajor()+
@@ -318,15 +330,27 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 			        		  " RSSI : "+ iBeacon.getRssi()+
 			        		  " Tx Power : "+ iBeacon.getTxPower());
 					
-				}
+					
+					
+				}*/
+				
+				
+				
+				
+				
 				
 				
 			}
+			
+
+			
+
+			
 		});
 
 		        try {
-		            iBeaconManager.startMonitoringBeaconsInRegion(new Region("1012", RADBEACON_UUID, null, null));
-		            iBeaconManager.startRangingBeaconsInRegion(new Region("1012", RADBEACON_UUID, null, null));
+		            //iBeaconManager.startMonitoringBeaconsInRegion(new Region("1012", RADBEACON_UUID, 1, 1));
+		            iBeaconManager.startRangingBeaconsInRegion(new Region("1012",null, null, null));
 		        } catch (RemoteException e) { 
 		        	Log.e(DEBUG_TAG,e.getMessage());
 		        }
@@ -335,7 +359,7 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	private void ToastToDisplay(final String line) {
     	runOnUiThread(new Runnable() {
     	    public void run() {
-    	    	//Toast.makeText(ArtworksListActivity.this,line, Toast.LENGTH_SHORT).show();
+    	    	Toast.makeText(ArtworksListActivity.this,line, Toast.LENGTH_SHORT).show();
             	Log.i(DEBUG_TAG, line);
     	    }
     	});
