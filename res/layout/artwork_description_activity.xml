@@ -37,40 +37,40 @@
         android:text="@string/mock_artwork_name"
         android:textSize="20sp" />
 
-    <TextView
+    <ScrollView
+        android:id="@+id/sv_body"
+        android:layout_width="750dp"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="30sp"
+        android:layout_marginLeft="60sp"
+        android:layout_marginRight="60sp"
+        android:layout_below="@+id/textview_artwork_name"
+        android:layout_above="@+id/bt_sound"
+        android:layout_centerHorizontal="true"
+    	android:scrollbarAlwaysDrawVerticalTrack="true"
+    	android:scrollbarFadeDuration="0"
+    	android:fadeScrollbars="false"
+    	android:scrollbarSize="12dip" >
+
+<!--         android:scrollbarTrackVertical="@drawable/scrollbar_vertical_track" -->
+<!--     	android:scrollbarThumbVertical="@drawable/scrollbar_vertical_thumb" -->
+        
+        <TextView
             android:id="@+id/textview_description"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30sp"
-            android:layout_marginLeft="60sp"
-            android:layout_marginRight="60sp"
-			android:layout_below="@+id/textview_artwork_name"
             android:text="description"
             android:textSize="16sp" />
-</RelativeLayout>
-
-<!-- <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" -->
-<!--     android:layout_width="match_parent" -->
-<!--     android:layout_height="wrap_content" -->
-<!--     android:gravity="top" -->
-<!--     android:orientation="vertical" > -->
-
-<!--     <LinearLayout -->
-<!--         android:layout_width="match_parent" -->
-<!--         android:layout_height="match_parent" -->
-<!--         android:layout_weight="4.02" -->
-<!--         android:orientation="vertical" > -->
-
-<!--         <TextView -->
-<!--             android:id="@+id/textview_creationdate" -->
-<!--             android:layout_width="wrap_content" -->
-<!--             android:layout_height="fill_parent" -->
-<!--             android:layout_gravity="center" -->
-<!--             android:layout_marginRight="10dp" -->
-<!--             android:text="creation date" -->
-<!--             android:textSize="20px" /> -->
-
+    </ScrollView>
+    
+    <ImageButton
+        android:id="@+id/bt_sound"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@drawable/btn_sound"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="10dp"
+        android:contentDescription="@string/hello_world" />
         
-<!--     </LinearLayout> -->
-
-<!-- </LinearLayout> -->
+</RelativeLayout>
