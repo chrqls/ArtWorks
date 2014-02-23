@@ -17,12 +17,13 @@ public class Artwork {
 	
 	public Artwork(String artworkName, 
 			String artistName,
+			String description,
 			Uri imageUri){
 		this.mArtistName=artistName;
-		this.mArtworkName=artworkName;
-		//this.mCreationDate=creationDate;
-		//this.mDescription=description;
+		this.mArtworkName=artworkName;	
+		this.mDescription=description;
 		this.mImageUri=imageUri;
+		this.mCreationDate=new Date();
 	}
 	
 	public Artwork(){}

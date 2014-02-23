@@ -1,6 +1,8 @@
 package com.artworks.ui;
 
-import com.artworks.R;
+import java.text.SimpleDateFormat;
+
+import com.artworks.ui.R;
 import com.artworks.data.Artwork;
 import com.artworks.data.ArtworkSQLiteHelper;
 
@@ -29,6 +31,15 @@ public class ArtworkDescriptionActivity extends Activity {
 		
 		TextView artworkNameTextView = (TextView)findViewById(R.id.textview_artwork_name);
 		artworkNameTextView.setText(artwork.getmArtworkName());
+		
+		TextView descriptionTextView = (TextView)findViewById(R.id.textview_description);
+		descriptionTextView.setText(artwork.getmDescription());
+		
+		TextView creationDateTextView = (TextView)findViewById(R.id.textview_creationdate);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 	    	
+		creationDateTextView.setText(dateFormat.format(artwork.getmCreationDate()));
+	    
+	    
 		
 		ImageView imageView = (ImageView)findViewById(R.id.imageView1);
 		imageView.setImageBitmap(decodeSampledBitmap(String.valueOf(artwork.getImageUri()), 250, 250));

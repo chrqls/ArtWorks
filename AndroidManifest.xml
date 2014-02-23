@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.artworks"
+    package="com.artworks.ui"
     android:versionCode="1"
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="8"
+        android:minSdkVersion="18"
         android:targetSdkVersion="18" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -29,7 +32,22 @@
             android:label="@string/app_name" >
         </activity>
         
-        
+           
+    <service android:enabled="true"
+        android:exported="true"
+        android:isolatedProcess="false"
+        android:label="iBeacon"
+        android:name="com.radiusnetworks.ibeacon.service.IBeaconService">
+    </service>    
+    <service android:enabled="true" 
+        android:name="com.radiusnetworks.ibeacon.IBeaconIntentProcessor">
+            <meta-data android:name="background" android:value="true" />
+        <intent-filter 
+           android:priority="1" >
+            <action android:name="com.artworks.ui.DID_RANGING" />
+            <action android:name="com.artworks.ui.DID_MONITORING" />
+        </intent-filter>
+    </service>
     </application>
 
 </manifest>

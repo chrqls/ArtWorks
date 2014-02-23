@@ -1,8 +1,9 @@
 package com.artworks.ui;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 
-import com.artworks.R;
+import com.artworks.ui.R;
 import com.artworks.data.Artwork;
 
 import android.app.Activity;
@@ -26,6 +27,7 @@ public class ArtworksListAdapter extends ArrayAdapter<Artwork> {
 		    public TextView artistName;	    
 		    public TextView artworkName;
 		    public TextView creationDate;
+		    public TextView description;
 		  }
 
 		  public ArtworksListAdapter(Activity context, List<Artwork> artworks) {
@@ -43,9 +45,9 @@ public class ArtworksListAdapter extends ArrayAdapter<Artwork> {
 		      ViewHolder viewHolder = new ViewHolder();
 		      viewHolder.image = (ImageView) rowView.findViewById(R.id.imageView1);
 		      viewHolder.artistName = (TextView) rowView.findViewById(R.id.textview_artist_name);
-		      viewHolder.artworkName = (TextView) rowView.findViewById(R.id.textview_creationdate);
-		      viewHolder.creationDate = (TextView) rowView.findViewById(R.id.textview_artwork_name);
-		      
+		      viewHolder.creationDate = (TextView) rowView.findViewById(R.id.textview_creationdate);
+		      viewHolder.artworkName = (TextView) rowView.findViewById(R.id.textview_artwork_name);	
+		      viewHolder.description = (TextView) rowView.findViewById(R.id.textView_description);
 		      rowView.setTag(viewHolder);
 		    }
 
@@ -56,11 +58,15 @@ public class ArtworksListAdapter extends ArrayAdapter<Artwork> {
 		   
 		    s = String.valueOf(artwork.getmArtworkName());
 		    holder.artworkName.setText(s);
+
+		    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 	    	
+		    holder.creationDate.setText(dateFormat.format(artwork.getmCreationDate()));
+		    
+		    s = artwork.getmDescription();
+		    s= s.substring(0, 150)+"...";
+		    holder.description.setText(s);
 		   
-		    s = String.valueOf(artwork.getmCreationDate());
-		    holder.creationDate.setText(s);
-		   
-		    holder.image.setImageBitmap(decodeSampledBitmap(String.valueOf(artwork.getImageUri()), 100, 100));
+		    holder.image.setImageBitmap(decodeSampledBitmap(String.valueOf(artwork.getImageUri()), 200, 300));
 		    
 
 		    return rowView;

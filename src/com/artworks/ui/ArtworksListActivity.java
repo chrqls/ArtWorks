@@ -1,37 +1,48 @@
 package com.artworks.ui;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import com.artworks.R;
+import com.artworks.ui.R;
 import com.artworks.data.Artwork;
 import com.artworks.data.ArtworkSQLiteHelper;
-
+import com.artworks.data.Beacon;
+import com.artworks.data.BeaconSQLiteHelper;
+import com.radiusnetworks.ibeacon.IBeacon;
+import com.radiusnetworks.ibeacon.IBeaconConsumer;
+import com.radiusnetworks.ibeacon.IBeaconManager;
+import com.radiusnetworks.ibeacon.MonitorNotifier;
+import com.radiusnetworks.ibeacon.RangeNotifier;
+import com.radiusnetworks.ibeacon.Region;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.RemoteException;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-public class ArtworksListActivity extends Activity {
+public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 
 	static final String DEBUG_TAG = "ArtworksListActivity";
 	static final String ACTION_SHOW_DETAILS="ACTION_SHOW_DETAILS";
 	static final String EXTRA_ARTWORK_ID="EXTRA_ARTWORK_ID";
+	static final String RADBEACON_UUID="ADFBB825-4268-4269-BFA7-C6B392CDB02A";
+	static final String UNIQUE_ID="Museum";
+	
+	private IBeaconManager iBeaconManager;
+	private List<Beacon> mAvailableBeacon;
+	private List<Artwork> mAvailableArtworks;
+	 ListView mListView;
 	
 	ArtworksListAdapter mAdapter;
 	
@@ -39,38 +50,62 @@ public class ArtworksListActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.artwork_list_activity);
+		iBeaconManager = IBeaconManager.getInstanceForApplication(this);
+        verifyBluetooth();
+        iBeaconManager.bind(this);	
+	
+        
+        
+        //SimulatedScanData data = new SimulatedScanData();
 		
-		final ListView listView = (ListView) findViewById(R.id.artworks_listview);
 		
-		 File pictureFileDir = getPictureDirectory();
-		 String pictureFileName = "IMG_20140221_151143.jpg";
-		 String picturePath = pictureFileDir.getPath()+File.separator+"DCIM"+File.separator+"Camera"+File.separator+pictureFileName;
-
-		Artwork artwork1 = new Artwork("art 3", "me",Uri.parse(picturePath));
-		Artwork artwork2 = new Artwork("Joconde","DaVinci",Uri.parse(picturePath));
-		
+		mListView = (ListView) findViewById(R.id.artworks_listview);
+		mAvailableArtworks = new ArrayList<Artwork>();
+		mAvailableBeacon = new ArrayList<Beacon>();
+		File pictureFileDir = getPictureDirectory();
+		String pictureFileName = "IMG_20140221_151143.jpg";
+		String picturePath = pictureFileDir.getPath()+File.separator+"DCIM"+File.separator+"Camera"+File.separator+pictureFileName;
 		
 		final ArtworkSQLiteHelper db = new ArtworkSQLiteHelper(this);
 
-		
-			//db.addArtworks(artwork1);
-			//db.addArtworks(artwork2);
-		
-	        List<Artwork> list = db.getAllArtworks();
-
-	        mAdapter= new ArtworksListAdapter(this, list); 
-	        listView.setAdapter(mAdapter);
-	         
-	         
-	        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		if(db.getSize()==0){
+			Artwork artwork1 = new Artwork(
+					"Mona Lisa",
+					"Leonardo da Vinci",
+					"The Mona Lisa is a half-length portrait of a woman by the Italian artist Leonardo da Vinci, which has been acclaimed as \"the best known, the most visited, the most written about, the most sung about, the most parodied work of art in the world\" " +
+					"The painting, thought to be a portrait of Lisa Gherardini, the wife of Francesco del Giocondo, is in oil on a white Lombardy poplar panel, and is believed to have been painted between 1503 and 1506, although Leonardo may have continued working on it as late as 1517." +
+					"It was acquired by King Francis I of France and is now the property of the French Republic, on permanent display at The Louvre museum in Paris since 1797. The ambiguity of the subject's expression, which is frequently described as enigmatic,[3] the monumentality of the composition, " +
+					"the subtle modeling of forms and the atmospheric illusionism were novel qualities that have contributed to the continuing fascination and study of the work",
+					Uri.parse(picturePath));
+			//Artwork artwork2 = new Artwork("Joconde","DaVinci",Uri.parse(picturePath));
+			db.addArtworks(artwork1);
+			db.addArtworks(artwork1);
+		}
+			
+	    List<Artwork> list = db.getAllArtworks();
+	    BeaconSQLiteHelper beaconDB = new BeaconSQLiteHelper(ArtworksListActivity.this);
+	    
+	    
+	    if(list.size()>0){
+	    	
+	    	for (Artwork artwork : list) {
+				Beacon beacon = new Beacon(RADBEACON_UUID,1,1);
+				beacon.setArtworkId(artwork.getId());
+				beaconDB.addBeacon(beacon);
+			}
+	    }
+	    
+	    
+	    
+	    mAdapter= new ArtworksListAdapter(this, mAvailableArtworks); 
+	    mListView.setAdapter(mAdapter);
+	              
+	    mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 	             @Override
 	             public void onItemClick(AdapterView<?> parent, final View view,
 	                 int position, long id) {
 	               final Artwork item = (Artwork) parent.getItemAtPosition(position);
-	               
-	               //Toast.makeText(getApplicationContext(), item.getmArtworkName() + " selected", Toast.LENGTH_SHORT).show();
-	               Log.i(DEBUG_TAG, "item clicked ");
 	               
 	               Intent intent = new Intent(ArtworksListActivity.this,ArtworkDescriptionActivity.class);
 	               intent.setAction(ACTION_SHOW_DETAILS);
@@ -80,18 +115,34 @@ public class ArtworksListActivity extends Activity {
 	             }
 	             
 	           });
-	        
-	      
 	         
 	}
 	
-	
-	
+		
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// TODO Auto-generated method stub
 		return super.onCreateOptionsMenu(menu);
 	}
+	
+	 @Override 
+	 protected void onDestroy() {   
+		 super.onDestroy();
+	        iBeaconManager.unBind(this);
+	 }
+	 
+	 @Override 
+	 protected void onPause() {
+	    super.onPause();
+	    if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, true);    		
+	 }
+	    
+	 @Override 
+	 protected void onResume() {
+	    super.onResume();
+	    if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, false);    		
+	 }    
+	    
 	
 	private File getPictureDirectory() {
           File sdDir = Environment.getExternalStorageDirectory();
@@ -104,35 +155,173 @@ public class ArtworksListActivity extends Activity {
 	
 	public void updateUi() {
 		mAdapter.notifyDataSetChanged();
+		mListView.refreshDrawableState();
+	}
+
+	private void verifyBluetooth() {
+
+		try {
+			if (!IBeaconManager.getInstanceForApplication(this).checkAvailability()) {
+				final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setTitle("Bluetooth not enabled");			
+				builder.setMessage("Please enable bluetooth in settings and restart this application.");
+				builder.setPositiveButton(android.R.string.ok, null);
+				builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+					@Override
+					public void onDismiss(DialogInterface dialog) {
+						finish();
+			            System.exit(0);					
+					}					
+				});
+				builder.show();
+			}			
+		}
+		catch (RuntimeException e) {
+			final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Bluetooth LE not available");			
+			builder.setMessage("Sorry, this device does not support Bluetooth LE.");
+			builder.setPositiveButton(android.R.string.ok, null);
+			builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+				@Override
+				public void onDismiss(DialogInterface dialog) {
+					finish();
+		            System.exit(0);					
+				}
+				
+			});
+			builder.show();
+			
+		}
+		
+	}
+
+	@Override
+	public void onIBeaconServiceConnect() {
+		 iBeaconManager.setMonitorNotifier(new MonitorNotifier() {
+		       
+			 	@Override
+		        public void didEnterRegion(Region region) {
+		          ToastToDisplay("Enter Region - id : "+ region.getUniqueId()+
+		        		  " UUID : "+region.getProximityUuid()+
+		        		  " Major : "+region.getMajor()+
+		        		  " Minor : "+region.getMinor());
+		          
+		          //int major  = region.getMajor();
+		          //int minor  = region.getMinor();
+		          String uuid = region.getProximityUuid();
+		          
+		         
+
+		          		          
+		          runOnUiThread(new Runnable() {
+		      	    public void run() {
+		      	    	
+		      	    	if(mAvailableBeacon.size()==0){
+				        	  BeaconSQLiteHelper db = new BeaconSQLiteHelper(ArtworksListActivity.this);      
+					          List<Beacon> list = db.getAllBeacons();
+				        	  mAvailableBeacon.add(list.get(0));
+				          }
+
+		      	    	mAvailableArtworks.clear();
+		      	    	ArtworkSQLiteHelper db = new ArtworkSQLiteHelper(ArtworksListActivity.this);      
+				          
+		      	    	for (Beacon beacon : mAvailableBeacon) {
+		      	    		Artwork artwork = db.getArtwork(beacon.getArtworkId());
+							mAvailableArtworks.add(artwork);
+						}
+		      	    	
+		      	    	updateUi();
+		      	    }
+		      	});
+		         
+		          
+		          
+			 	}
+
+		        @Override
+		        public void didExitRegion(Region region) {
+		        	 ToastToDisplay("Exit Region - id : "+ region.getUniqueId()+
+			        		  " UUID : "+region.getProximityUuid()+
+			        		  " Major : "+region.getMajor()+
+			        		  " Minor : "+region.getMinor());
+		        }
+
+		        @Override
+		        public void didDetermineStateForRegion(int state, Region region) {
+		        	 String s = null;
+		        	switch (state) {
+					case 0:
+						s="PROXIMITY_UNKNOW";
+						break;
+					case 1:
+						s="PROXIMITY_NEAR";
+						break;
+					case 2:
+						s="PROXIMITY_IMMEDIATE";
+						break;
+					case 3:
+						s="PROXIMITY_FAR";
+						break;
+
+					default:
+						break;
+					}
+		        	
+		        	
+		        	ToastToDisplay("Enter Region - id : "+ region.getUniqueId()+
+			        		  " UUID : "+region.getProximityUuid()+
+			        		  " Major : "+region.getMajor()+
+			        		  " Minor : "+region.getMinor()+
+			        		  " State : "+s);
+    
+		        }
+
+
+		        });
+		 
+		 iBeaconManager.setRangeNotifier(new RangeNotifier() {
+			
+			@Override
+			public void didRangeBeaconsInRegion(Collection<IBeacon> beacons, Region region) {
+				
+				for (IBeacon iBeacon : beacons) {
+					/*ToastToDisplay("Region - id : "+ region.getUniqueId()+
+			        		  " UUID : "+region.getProximityUuid()+
+			        		  " Major : "+region.getMajor()+
+			        		  " Minor : "+region.getMinor()+
+			        		  " State : ");*/
+					
+					ToastToDisplay("Beacon - uuid : "+ iBeacon.getProximityUuid()+
+			        		  " proximity : "+iBeacon.getProximity()+
+			        		  " Major : "+iBeacon.getMajor()+
+			        		  " Minor : "+iBeacon.getMinor()+
+			        		  " State : "+iBeacon.getAccuracy()+
+			        		  " RSSI : "+ iBeacon.getRssi()+
+			        		  " Tx Power : "+ iBeacon.getTxPower());
+					
+				}
+				
+				
+			}
+		});
+
+		        try {
+		            iBeaconManager.startMonitoringBeaconsInRegion(new Region("1012", RADBEACON_UUID, null, null));
+		            iBeaconManager.startRangingBeaconsInRegion(new Region("1012", RADBEACON_UUID, null, null));
+		        } catch (RemoteException e) { 
+		        	Log.e(DEBUG_TAG,e.getMessage());
+		        }
 	}
 	
-	/*public static AlertDialog getTextDialog(Context ctx,
-	        final NewArtworksListener listener) {
-	   
-		
-		View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_add_goals, null);
-	    
-	    final TextView nameTextView = (TextView) view.findViewById(R.id.goal_name);
-	    final TextView amountToReachTextView = (TextView) view.findViewById(R.id.goal_amount_to_reach);
-	    
-	    AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
-	    builder.setView(view);
-	    
-	    //
-	    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-
-	        @Override
-	        public void onClick(DialogInterface dialog, int which) {
-	            Goal goal = new Goal();
-	            String t = nameTextView.getText().toString();
-	            goal.setName(t);
-	        	goal.setAmountToReach(Float.valueOf(amountToReachTextView.getText().toString()));
-	        	listener.OnNewGoals(goal);
-	        }
-	    });
-	    builder.setNegativeButton(android.R.string.cancel, null);
-	    return builder.create();
-	}*/
-	
+	private void ToastToDisplay(final String line) {
+    	runOnUiThread(new Runnable() {
+    	    public void run() {
+    	    	//Toast.makeText(ArtworksListActivity.this,line, Toast.LENGTH_SHORT).show();
+            	Log.i(DEBUG_TAG, line);
+    	    }
+    	});
+    }
+    
 	
 }

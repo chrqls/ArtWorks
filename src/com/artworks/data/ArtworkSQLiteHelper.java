@@ -1,5 +1,7 @@
 package com.artworks.data;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +12,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
@@ -17,27 +20,27 @@ public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
-    private static final String DATABASE_NAME = "artworkste";   
+    private static final String DATABASE_NAME = "artworksdbdb";   
    
     private static final String TABLE_ARTWORKS = "artworks";
 
     private static final String KEY_ID = "id";
     private static final String KEY_ARTIST_NAME = "artistname";
     private static final String KEY_ARTWORK_NAME = "artworkname";
-    //private static final String KEY_DESCRIPTION = "description";
+    private static final String KEY_DESCRIPTION = "description";
     //private static final String KEY_SOUND_URI = "sounduri";
     private static final String KEY_IMAGE_URI = "imageuri";
-    //private static final String KEY_CREATION_DATE = "creationdate";
+    private static final String KEY_CREATION_DATE = "creationdate";
     
     
     private static final String[] COLUMNS = {
     	KEY_ID,
     	KEY_ARTIST_NAME,
-    	KEY_ARTWORK_NAME,
-    	//KEY_CREATION_DATE,
-    	//KEY_DESCRIPTION,
+    	KEY_ARTWORK_NAME,	
+    	KEY_DESCRIPTION,
     	//KEY_SOUND_URI,
-    	KEY_IMAGE_URI
+    	KEY_IMAGE_URI,
+    	KEY_CREATION_DATE
     	};
  
     public ArtworkSQLiteHelper(Context context) {
@@ -46,15 +49,15 @@ public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
  
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // SQL statement to create book table
+
         String CREATE_TABLE = "CREATE TABLE "+ TABLE_ARTWORKS +" ( " +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 KEY_ARTIST_NAME+ " TEXT, "+
-                KEY_ARTWORK_NAME+ " TEXT, "+
-                //KEY_CREATION_DATE+ " DATETIME, "+
-                //KEY_DESCRIPTION+ " TEXT, "+
+                KEY_ARTWORK_NAME+ " TEXT, "+             
+                KEY_DESCRIPTION+ " TEXT, "+
                 //KEY_SOUND_URI+ " TEXT, "+
-                KEY_IMAGE_URI+ " TEXT ) ";
+                KEY_IMAGE_URI+ " TEXT, "+
+                KEY_CREATION_DATE+ " DATE )";
  
         
         // create books table
@@ -70,23 +73,24 @@ public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
         this.onCreate(db);
     }
     
+    public int getSize(){
+    	 return getAllArtworks().size();
+    }
+    
     public void addArtworks(Artwork artwork){
-        //for logging
-    	//Log.d("addBook", book.toString());
 
-    	// 1. get reference to writable DB
+
     	SQLiteDatabase db = this.getWritableDatabase();
 
-    	// 2. create ContentValues to add key "column"/value
     	ContentValues values = new ContentValues();
-    	values.put(KEY_ARTIST_NAME, artwork.getmArtistName()); // get title
-    	values.put(KEY_ARTWORK_NAME, artwork.getmArtworkName()); // get author
-    	//values.put(KEY_CREATION_DATE, artwork.getmCreationDate()); // get author
-    	/*if(artwork.getmDescription()!=null)
-    		values.put(KEY_DESCRIPTION, artwork.getmDescription());
-    	if(artwork.getmSoundUri()!=null)
+    	values.put(KEY_ARTIST_NAME, artwork.getmArtistName()); 
+    	values.put(KEY_ARTWORK_NAME, artwork.getmArtworkName()); 	
+    	values.put(KEY_DESCRIPTION, artwork.getmDescription());
+    	/*if(artwork.getmSoundUri()!=null)
     		values.put(KEY_SOUND_URI, artwork.getmSoundUri());*/
     	values.put(KEY_IMAGE_URI, String.valueOf(artwork.getImageUri()));
+    	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+    	values.put(KEY_CREATION_DATE, dateFormat.format(artwork.getmCreationDate()));
     	
     	// 3. insert
     	db.insert(TABLE_ARTWORKS, // table
@@ -119,13 +123,23 @@ public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
      
         // 4. build book object
         Artwork artwork = new Artwork();
-        artwork.setId(Integer.parseInt(cursor.getString(0)));
-        artwork.setmArtistName(cursor.getString(1));
-        artwork.setmArtworkName(cursor.getString(2));
-        //artwork.setmDescription(cursor.getString(3));
+        artwork.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ID))));
+        artwork.setmArtistName(cursor.getString(cursor.getColumnIndex(KEY_ARTIST_NAME)));
+        artwork.setmArtworkName(cursor.getString(cursor.getColumnIndex(KEY_ARTWORK_NAME)));
+        artwork.setmDescription(cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION)));
+        artwork.setmImageUri(Uri.parse(cursor.getString(cursor.getColumnIndex(KEY_IMAGE_URI))));
+        
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 
+        Date date = new Date();
+        String d = cursor.getString(cursor.getColumnIndex(KEY_CREATION_DATE));
+        try {
+			date = dateFormat.parse(d);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        artwork.setmCreationDate(date);
         //artwork.setmSoundUri(cursor.getString(4));
-        artwork.setmImageUri(Uri.parse(cursor.getString(3)));
-     // artwork.setmCreationDate(Date.parse(cursor.getString(3)));
         
          
         
@@ -151,13 +165,21 @@ public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
             	artwork = new Artwork();
-            	artwork.setId(Integer.parseInt(cursor.getString(0)));
-            	artwork.setmArtistName(cursor.getString(1));
-            	artwork.setmArtworkName(cursor.getString(2));
-            	//artwork.setmDescription(cursor.getString(3));
-                //artwork.setmSoundUri(cursor.getString(4));
-                artwork.setmImageUri(Uri.parse(cursor.getString(3)));
-                //TODO artwork.setmCreationDate(Date.parse(cursor.getString(3)));
+            	artwork.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ID))));
+                artwork.setmArtistName(cursor.getString(cursor.getColumnIndex(KEY_ARTIST_NAME)));
+                artwork.setmArtworkName(cursor.getString(cursor.getColumnIndex(KEY_ARTWORK_NAME)));
+                artwork.setmDescription(cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION)));
+                artwork.setmImageUri(Uri.parse(cursor.getString(cursor.getColumnIndex(KEY_IMAGE_URI))));
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 
+                Date date = new Date();
+                String d = cursor.getString(cursor.getColumnIndex(KEY_CREATION_DATE));
+                try {
+					date = dateFormat.parse(d);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+                artwork.setmCreationDate(date);
                 
                 artworks.add(artwork);
             } while (cursor.moveToNext());
@@ -169,18 +191,16 @@ public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
     
     public int updateArtwork(Artwork artwork) {
     	 
-        // 1. get reference to writable DB
         SQLiteDatabase db = this.getWritableDatabase();
      
-        // 2. create ContentValues to add key "column"/value
         ContentValues values = new ContentValues();
-        values.put(KEY_ARTIST_NAME, artwork.getmArtistName()); // get title
-    	values.put(KEY_ARTWORK_NAME, artwork.getmArtworkName()); // get author
-    	//values.put(KEY_DESCRIPTION, artwork.getmDescription());
-    	//values.put(KEY_SOUND_URI, artwork.getmSoundUri());
+        values.put(KEY_ARTIST_NAME, artwork.getmArtistName()); 
+    	values.put(KEY_ARTWORK_NAME, artwork.getmArtworkName());
+    	values.put(KEY_DESCRIPTION, artwork.getmDescription());
     	values.put(KEY_IMAGE_URI, String.valueOf(artwork.getImageUri()));
-    	//values.put(KEY_CREATION_DATE, artwork.getmCreationDate()); // get author
-    	
+    	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 
+    	values.put(KEY_CREATION_DATE, dateFormat.format(artwork.getmCreationDate()));
+    	//values.put(KEY_SOUND_URI, artwork.getmSoundUri());
     	
         // 3. updating row
         int i = db.update(TABLE_ARTWORKS, //table
