@@ -27,6 +27,7 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -49,10 +50,12 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.artwork_list_activity);
-		iBeaconManager = IBeaconManager.getInstanceForApplication(this);
+		
+		/*iBeaconManager = IBeaconManager.getInstanceForApplication(this);
         verifyBluetooth();
-        iBeaconManager.bind(this);	
+        iBeaconManager.bind(this);	*/
 	
         
         
@@ -70,16 +73,31 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 
 		if(db.getSize()==0){
 			Artwork artwork1 = new Artwork(
-					"Mona Lisa",
-					"Leonardo da Vinci",
-					"The Mona Lisa is a half-length portrait of a woman by the Italian artist Leonardo da Vinci, which has been acclaimed as \"the best known, the most visited, the most written about, the most sung about, the most parodied work of art in the world\" " +
-					"The painting, thought to be a portrait of Lisa Gherardini, the wife of Francesco del Giocondo, is in oil on a white Lombardy poplar panel, and is believed to have been painted between 1503 and 1506, although Leonardo may have continued working on it as late as 1517." +
-					"It was acquired by King Francis I of France and is now the property of the French Republic, on permanent display at The Louvre museum in Paris since 1797. The ambiguity of the subject's expression, which is frequently described as enigmatic,[3] the monumentality of the composition, " +
-					"the subtle modeling of forms and the atmospheric illusionism were novel qualities that have contributed to the continuing fascination and study of the work",
+					"Male-Female (1942)",
+					"Jackson Pollock",
+					"Male - Female is a 1942 oil on canvas painting by Edward Hopper " +
+					"that portrays people sitting in a downtown diner late at night. " + 
+					"It is Hopper's most famous work and is one of the most recognizable paintings in American art. " +
+					"Within months of its completion, it was sold to the Art Institute of Chicago for $3,000 and has remained there ever since.",
+					Uri.parse(picturePath));
+			
+			Artwork artwork2 = new Artwork(
+					"Mao (1973)",
+					"Andy Warhol",
+					"The influential Pop artist Andy Warhol cast a cool, ironic light on the pervasiveness of commercial " +
+					"culture and contemporary celebrity worship. " +
+					"\n\nEarly in his career, he began to utilize the silkscreen process to transfer photographic images to canvas: " +
+					"images of mass-produced consumer products and Hollywood film stars are among his most recognizable subjects. " +
+					"In this example from his Mao series, Warhol melded his signature style with the scale of totalitarian propaganda " +
+					"to address the cult of personality surrounding Chinese ruler Mao Zedong (1893–1976). " +
+					"Nearly 15 feet tall, this towering work mimics the representations of the political figure that were ubiquitous " +
+					"throughout China. In contrast to the photographic nature of the image, garish colors were applied like makeup to " +
+					"Mao’s face. Ultimately, the portrait shows Warhol at his most painterly, rendering Mao, an enemy of individualism, " +
+					"in a brazenly personal style.",
 					Uri.parse(picturePath));
 			//Artwork artwork2 = new Artwork("Joconde","DaVinci",Uri.parse(picturePath));
 			db.addArtworks(artwork1);
-			db.addArtworks(artwork1);
+			db.addArtworks(artwork2);
 		}
 			
 	    List<Artwork> list = db.getAllArtworks();
@@ -97,7 +115,7 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	    
 	    
 	    
-	    mAdapter= new ArtworksListAdapter(this, mAvailableArtworks); 
+	    mAdapter= new ArtworksListAdapter(this, list); 
 	    mListView.setAdapter(mAdapter);
 	              
 	    mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -128,19 +146,19 @@ public class ArtworksListActivity extends Activity implements IBeaconConsumer {
 	 @Override 
 	 protected void onDestroy() {   
 		 super.onDestroy();
-	        iBeaconManager.unBind(this);
+	        //iBeaconManager.unBind(this);
 	 }
 	 
 	 @Override 
 	 protected void onPause() {
 	    super.onPause();
-	    if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, true);    		
+	    //if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, true);    		
 	 }
 	    
 	 @Override 
 	 protected void onResume() {
 	    super.onResume();
-	    if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, false);    		
+	    //if (iBeaconManager.isBound(this)) iBeaconManager.setBackgroundMode(this, false);    		
 	 }    
 	    
 	

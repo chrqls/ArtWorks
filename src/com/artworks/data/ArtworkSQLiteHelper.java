@@ -20,7 +20,7 @@ public class ArtworkSQLiteHelper extends SQLiteOpenHelper {
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
-    private static final String DATABASE_NAME = "artworksdbdb";   
+    private static final String DATABASE_NAME = "artworksdb";   
    
     private static final String TABLE_ARTWORKS = "artworks";
 
