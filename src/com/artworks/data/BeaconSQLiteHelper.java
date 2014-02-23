@@ -1,6 +1,5 @@
 package com.artworks.data;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,7 +8,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
 import android.util.Log;
 
 public class BeaconSQLiteHelper extends SQLiteOpenHelper {
@@ -17,7 +15,7 @@ public class BeaconSQLiteHelper extends SQLiteOpenHelper {
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
-    private static final String DATABASE_NAME = "artworkstest";   
+    private static final String DATABASE_NAME = "artworksss";   
    
     private static final String TABLE_BEACONS = "beacons";
 
@@ -102,26 +100,26 @@ public class BeaconSQLiteHelper extends SQLiteOpenHelper {
             cursor.moveToFirst();
      
         Beacon beacon = new Beacon();
-        beacon.setId(Integer.parseInt(cursor.getString(0)));
-        beacon.setUUID(cursor.getString(1));
-        beacon.setMajor(Integer.parseInt(cursor.getString(2)));
-        beacon.setMinor(Integer.parseInt(cursor.getString(2)));
-        beacon.setArtworkId(Integer.parseInt(cursor.getString(3)));
+        beacon.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ID))));
+        beacon.setUUID(cursor.getString(cursor.getColumnIndex(KEY_UUID)));
+        beacon.setMajor(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MAJOR))));
+        beacon.setMinor(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MINOR))));
+        beacon.setArtworkId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ARTWORK_ID))));
         return beacon;
     }
     
-    public Beacon getBeacon(String uuid, int major, int minor){
+    
+    public Beacon getBeacon(int major, int minor){
    	 
         // 1. get reference to readable DB
         SQLiteDatabase db = this.getReadableDatabase();
      
         // 2. build query
         Cursor cursor =
-        		
-                db.query(TABLE_BEACONS, 
-                COLUMNS, 
-                KEY_UUID+" = "+uuid+" AND "+KEY_MAJOR+" = "+major+ " AND "+KEY_MINOR+ " = "+minor, 
-                null, // d. selections args
+                db.query(TABLE_BEACONS, // a. table
+                COLUMNS, // b. column names
+                " major = ?", // c. selections
+                new String[] { String.valueOf(major) }, // d. selections args
                 null, // e. group by
                 null, // f. having
                 null, // g. order by
@@ -131,44 +129,48 @@ public class BeaconSQLiteHelper extends SQLiteOpenHelper {
         if (cursor != null)
             cursor.moveToFirst();
      
-        
-        	Beacon beacon = new Beacon();
-        	beacon.setId(Integer.parseInt(cursor.getString(0)));
-        	beacon.setUUID(cursor.getString(1));
-        	beacon.setMajor(Integer.parseInt(cursor.getString(2)));
-        	beacon.setMinor(Integer.parseInt(cursor.getString(2)));
-        	beacon.setArtworkId(Integer.parseInt(cursor.getString(3)));
+        Beacon beacon = new Beacon();
+        beacon.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ID))));
+        beacon.setUUID(cursor.getString(cursor.getColumnIndex(KEY_UUID)));
+        beacon.setMajor(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MAJOR))));
+        beacon.setMinor(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MINOR))));
+        beacon.setArtworkId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ARTWORK_ID))));
         return beacon;
     }
     
     
+    
     public Beacon getBeacon(String uuid){
       	 
-        // 1. get reference to readable DB
+    	// 1. get reference to readable DB
         SQLiteDatabase db = this.getReadableDatabase();
      
         // 2. build query
         Cursor cursor =
-        		
-                db.query(TABLE_BEACONS, 
-                COLUMNS, 
-                KEY_UUID+" = "+uuid, 
-                null, // d. selections args
+                db.query(TABLE_BEACONS, // a. table
+                COLUMNS, // b. column names
+                " uuid = ?", // c. selections
+                new String[] { uuid }, // d. selections args
                 null, // e. group by
                 null, // f. having
                 null, // g. order by
                 null); // h. limit
      
+        // 3. if we got results get the first one
         if (cursor != null)
             cursor.moveToFirst();
      
-        
-        	Beacon beacon = new Beacon();
-        	beacon.setId(Integer.parseInt(cursor.getString(0)));
-        	beacon.setUUID(cursor.getString(1));
-        	beacon.setMajor(Integer.parseInt(cursor.getString(2)));
-        	beacon.setMinor(Integer.parseInt(cursor.getString(2)));
-        	beacon.setArtworkId(Integer.parseInt(cursor.getString(3)));
+        Beacon beacon = new Beacon();
+        if (cursor != null&&cursor.getCount()>0){
+        	beacon.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ID))));
+        	beacon.setUUID(cursor.getString(cursor.getColumnIndex(KEY_UUID)));
+        	beacon.setMajor(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MAJOR))));
+        	beacon.setMinor(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MINOR))));
+        	beacon.setArtworkId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ARTWORK_ID))));
+        }else{
+        	return null;
+        }
+           
         return beacon;
     }
     
@@ -236,6 +238,37 @@ public class BeaconSQLiteHelper extends SQLiteOpenHelper {
         db.close();
         Log.d("delete artwork", beacon.toString());
  
+    }
+    
+    public Beacon getBeacon(String uuid, int major, int minor){
+      	 
+        // 1. get reference to readable DB
+        SQLiteDatabase db = this.getReadableDatabase();
+     
+        // 2. build query
+        Cursor cursor =
+        		
+                db.query(TABLE_BEACONS, 
+                COLUMNS, 
+                KEY_UUID+" = "+uuid+" AND "+KEY_MAJOR+" = "+major+ " AND "+KEY_MINOR+ " = "+minor, 
+                null, // d. selections args
+                null, // e. group by
+                null, // f. having
+                null, // g. order by
+                null); // h. limit
+     
+        // 3. if we got results get the first one
+        if (cursor != null)
+            cursor.moveToFirst();
+     
+        
+        	Beacon beacon = new Beacon();
+        	beacon.setId(Integer.parseInt(cursor.getString(0)));
+        	beacon.setUUID(cursor.getString(1));
+        	beacon.setMajor(Integer.parseInt(cursor.getString(2)));
+        	beacon.setMinor(Integer.parseInt(cursor.getString(2)));
+        	beacon.setArtworkId(Integer.parseInt(cursor.getString(3)));
+        return beacon;
     }
 }
 
